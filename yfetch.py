@@ -77,7 +77,6 @@ def de_wm():
 
 
 def packages():
-    # Dictionary of binary name -> (command list, subtract_header_line_bool)
     pkg_managers = {
         "pacman": (["pacman", "-Q"], False),
         "dpkg-query": (["dpkg-query", "-f", ".\n", "-W"], False),
@@ -85,7 +84,7 @@ def packages():
         "emerge": (["qlist", "-I"], False),
         "xbps-query": (["xbps-query", "-l"], False),
         "flatpak": (["flatpak", "list"], False),
-        "snap": (["snap", "list"], True),  # 'snap list' includes a header row
+        "snap": (["snap", "list"], True),
     }
 
     results = []
