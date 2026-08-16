@@ -106,15 +106,15 @@ def packages():
 
 def main():
     print("yfetch...")
-    print("Operating System : " + str(os_name()))
-    print("Kernel : " + platform.release())
-    print("Hostname : " + platform.node())
-    print("DE/WM : " + de_wm())
-    print("CPU : " + cpu_info())
-    print("GPU : " + gpu_info())
-    print("Shell : " + str(shell_name()))
-    print("Packages : " + packages())
-    print("Uptime : " + uptime())
+    print("Operating System: " + str(os_name()))
+    print("Kernel: " + platform.release())
+    print("Hostname: " + platform.node())
+    print("DE/WM: " + de_wm())
+    print("CPU: " + cpu_info())
+    print("GPU: " + gpu_info())
+    print("Shell: " + str(shell_name()))
+    print("Packages: " + packages())
+    print("Uptime: " + uptime())
 
 
 
