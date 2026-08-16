@@ -109,10 +109,10 @@ def main():
     print("Operating System : " + str(os_name()))
     print("Kernel : " + platform.release())
     print("Hostname : " + platform.node())
+    print("DE/WM : " + de_wm())
     print("CPU : " + cpu_info())
     print("GPU : " + gpu_info())
     print("Shell : " + str(shell_name()))
-    print("DE/WM : " + de_wm())
     print("Packages : " + packages())
     print("Uptime : " + uptime())
 
