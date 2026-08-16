@@ -1,0 +1,8 @@
+[project]
+name = "yfetch"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "psutil>=7.2.2",
+    "rich>=15.0.0",
+]
