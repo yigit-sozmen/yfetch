@@ -1,14 +1,28 @@
+import argparse
+from datetime import datetime
+from itertools import zip_longest
 import os
 import platform
 import re
-import subprocess
-from datetime import datetime
-import psutil
 import shutil
+import subprocess
+
+import psutil
+from logos import RESET, get_logo_and_color
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="yfetch - A custom system fetch tool")
+    parser.add_argument(
+        "-d",
+        "--distro",
+        type=str,
+        help="Override auto-detected OS logo (e.g. yfetch -d gentoo)",
+    )
+    return parser.parse_args()
 
 
 def os_name() -> str:
-
     try:
         return platform.freedesktop_os_release().get("NAME", platform.system())
     except (AttributeError, OSError):
@@ -16,8 +30,9 @@ def os_name() -> str:
 
 
 def shell_name():
-    shell_path = os.environ.get("SHELL","UNKNOWN")
+    shell_path = os.environ.get("SHELL", "UNKNOWN")
     return os.path.basename(shell_path)
+
 
 def cpu_info():
     try:
@@ -29,23 +44,22 @@ def cpu_info():
         pass
     return "N/A"
 
-# def gpu_info():
-#     try:
-#         output = subprocess.run(['lspci'] , stdout=subprocess.PIPE,stderr=subprocess , text=True)
-#         gpu_lines = re.findall(r'(VGA compatible controller|3D Controller): (.+)', output.stdout , re.IGNORECASE)
-#         gpu_name = [gpu[1] for gpu in gpu_lines]
-#         return ','. join(gpu_name)  if gpu_name else 'N/A'
-#     except Exception:
-#         return("N/A")
 
 def gpu_info():
     try:
-        output = subprocess.run(['lspci'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        gpu_lines = re.findall(r'(VGA compatible controller|3D controller): (.+)', output.stdout, re.IGNORECASE)
+        output = subprocess.run(
+            ["lspci"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        gpu_lines = re.findall(
+            r"(VGA compatible controller|3D controller): (.+)",
+            output.stdout,
+            re.IGNORECASE,
+        )
         gpu_names = [gpu[1] for gpu in gpu_lines]
-        return ', '.join(gpu_names) if gpu_names else 'N/A'
+        return ", ".join(gpu_names) if gpu_names else "N/A"
     except Exception:
         return "N/A"
+
 
 def uptime():
     boot_time = psutil.boot_time()
@@ -53,14 +67,17 @@ def uptime():
     uptime_s = int(now - boot_time)
     days, remainder = divmod(uptime_s, 86400)
     hours, remainder = divmod(remainder, 3600)
-    minutes, seconds = divmod(remainder, 60)
+    minutes, _ = divmod(remainder, 60)
 
-    uptime_final = f"{days}d {hours}h {minutes}m"
-    return uptime_final
+    return f"{days}d {hours}h {minutes}m"
 
 
 def de_wm():
-    raw_de = os.environ.get("XDG_CURRENT_DESKTOP") or os.environ.get("DESKTOP_SESSION") or ""
+    raw_de = (
+        os.environ.get("XDG_CURRENT_DESKTOP")
+        or os.environ.get("DESKTOP_SESSION")
+        or ""
+    )
     de_map = {
         "KDE": "KDE Plasma",
         "plasma": "KDE Plasma",
@@ -92,11 +109,21 @@ def packages():
     for binary, (cmd, has_header) in pkg_managers.items():
         if shutil.which(binary):
             try:
-                output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                output = subprocess.run(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                )
                 if output.returncode == 0:
-                    lines = [line for line in output.stdout.strip().splitlines() if line]
-                    count = len(lines) - 1 if has_header and len(lines) > 0 else len(lines)
-                    display_name = "pacman" if binary == "pacman" else binary.replace("-query", "")
+                    lines = [
+                        line for line in output.stdout.strip().splitlines() if line
+                    ]
+                    count = (
+                        len(lines) - 1
+                        if has_header and len(lines) > 0
+                        else len(lines)
+                    )
+                    display_name = (
+                        "pacman" if binary == "pacman" else binary.replace("-query", "")
+                    )
                     results.append(f"{count} ({display_name})")
             except Exception:
                 pass
@@ -104,22 +131,39 @@ def packages():
     return ", ".join(results) if results else "N/A"
 
 
+def print_fetch(distro: str, raw_stats: list[tuple[str, str]]):
+    logo_ascii, color = get_logo_and_color(distro)
+    logo_lines = logo_ascii.strip("\n").splitlines()
+
+    info_lines = [
+        f"\033[1;37m{platform.node()}@yfetch\033[0m",
+        "-------------------",
+    ] + [f"{color}{label}:\033[0m {value}" for label, value in raw_stats]
+
+    max_logo_width = max(len(line) for line in logo_lines) if logo_lines else 0
+
+    for logo_line, info in zip_longest(logo_lines, info_lines, fillvalue=""):
+        padded_logo = f"{logo_line:<{max_logo_width}}"
+        print(f"{color}{padded_logo}{RESET}  {info}")
+
+
 def main():
-    print("yfetch...")
-    print("Operating System: " + str(os_name()))
-    print("Kernel: " + platform.release())
-    print("Hostname: " + platform.node())
-    print("DE/WM: " + de_wm())
-    print("CPU: " + cpu_info())
-    print("GPU: " + gpu_info())
-    print("Shell: " + str(shell_name()))
-    print("Packages: " + packages())
-    print("Uptime: " + uptime())
+    args = parse_args()
 
+    distro = args.distro if args.distro else os_name()
+    raw_stats = [
+        ("OS", distro),
+        ("Kernel", platform.release()),
+        ("Uptime", uptime()),
+        ("Packages", packages()),
+        ("Shell", shell_name()),
+        ("DE/WM", de_wm()),
+        ("CPU", cpu_info()),
+        ("GPU", gpu_info()),
+    ]
 
+    print_fetch(distro, raw_stats)
 
 
 if __name__ == "__main__":
     main()
-
-
