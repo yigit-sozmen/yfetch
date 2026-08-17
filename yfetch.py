@@ -179,9 +179,11 @@ def print_fetch(distro: str, raw_stats: list[tuple[str, str]]):
 def main():
     args = parse_args()
 
-    distro = args.distro if args.distro else os_name()
+    actual_os = os_name()
+    logo_distro = args.distro if args.distro else actual_os
+
     raw_stats = [
-        ("OS", distro),
+        ("OS", actual_os),
         ("Kernel", platform.release()),
         ("Uptime", uptime()),
         ("Packages", packages()),
@@ -191,8 +193,7 @@ def main():
         ("GPU", gpu_info()),
     ]
 
-    print_fetch(distro, raw_stats)
-
+    print_fetch(logo_distro, raw_stats)
 
 if __name__ == "__main__":
     main()
