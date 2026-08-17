@@ -6,8 +6,9 @@ import platform
 import re
 import shutil
 import subprocess
+
 import psutil
-from logos import RESET, get_logo_and_color
+from logos import BOLD, RESET, get_logo_and_color
 
 
 def parse_args():
@@ -72,7 +73,11 @@ def uptime():
     hours, remainder = divmod(remainder, 3600)
     minutes, _ = divmod(remainder, 60)
 
-    return f"{days}d {hours}h {minutes}m"
+    if days > 0:
+        return f"{days}d {hours}h {minutes}m"
+    elif hours > 0:
+        return f"{hours}h {minutes}m"
+    return f"{minutes}m"
 
 
 def de_wm():
@@ -136,14 +141,30 @@ def packages():
 
 def print_fetch(distro: str, raw_stats: list[tuple[str, str]]):
     logo_ascii, c1, _ = get_logo_and_color(distro)
-    logo_lines = logo_ascii.strip("\n").splitlines()
+
+    logo_lines = [
+        f"{c1}{line}{RESET}" for line in logo_ascii.strip("\n").splitlines()
+    ]
+
+    header_text = f"{platform.node()}@yfetch"
+    separator = "-" * len(header_text)
 
     info_lines = [
-        f"\033[1;37m{platform.node()}@yfetch\033[0m",
-        "-------------------",
-    ] + [f"{c1}{label}:\033[0m {value}" for label, value in raw_stats]
+        f"{BOLD}{c1}{header_text}{RESET}",
+        f"{c1}{separator}{RESET}",
+    ] + [f"{BOLD}{c1}{label}:{RESET} {value}" for label, value in raw_stats]
 
-    max_logo_width = max(len(strip_ansi(line)) for line in logo_lines) if logo_lines else 0
+    
+    color_blocks = [
+        "",
+        "".join(f"\033[4{i}m   " for i in range(8)) + RESET,
+        "".join(f"\033[10{i}m   " for i in range(8)) + RESET,
+    ]
+    info_lines.extend(color_blocks)
+
+    max_logo_width = (
+        max(len(strip_ansi(line)) for line in logo_lines) if logo_lines else 0
+    )
 
     for logo_line, info in zip_longest(logo_lines, info_lines, fillvalue=""):
         logo_line = logo_line or ""
