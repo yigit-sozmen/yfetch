@@ -6,7 +6,6 @@ import platform
 import re
 import shutil
 import subprocess
-
 import psutil
 from logos import RESET, get_logo_and_color
 
@@ -20,6 +19,10 @@ def parse_args():
         help="Override auto-detected OS logo (e.g. yfetch -d gentoo)",
     )
     return parser.parse_args()
+
+
+def strip_ansi(text: str) -> str:
+    return re.sub(r"\033\[[0-9;]*m", "", text)
 
 
 def os_name() -> str:
@@ -132,19 +135,24 @@ def packages():
 
 
 def print_fetch(distro: str, raw_stats: list[tuple[str, str]]):
-    logo_ascii, color = get_logo_and_color(distro)
+    logo_ascii, c1, _ = get_logo_and_color(distro)
     logo_lines = logo_ascii.strip("\n").splitlines()
 
     info_lines = [
         f"\033[1;37m{platform.node()}@yfetch\033[0m",
         "-------------------",
-    ] + [f"{color}{label}:\033[0m {value}" for label, value in raw_stats]
+    ] + [f"{c1}{label}:\033[0m {value}" for label, value in raw_stats]
 
-    max_logo_width = max(len(line) for line in logo_lines) if logo_lines else 0
+    max_logo_width = max(len(strip_ansi(line)) for line in logo_lines) if logo_lines else 0
 
     for logo_line, info in zip_longest(logo_lines, info_lines, fillvalue=""):
-        padded_logo = f"{logo_line:<{max_logo_width}}"
-        print(f"{color}{padded_logo}{RESET}  {info}")
+        logo_line = logo_line or ""
+        info = info or ""
+
+        visible_len = len(strip_ansi(logo_line))
+        padding = " " * (max_logo_width - visible_len)
+
+        print(f"{logo_line}{padding}  {info}")
 
 
 def main():

@@ -1,80 +1,65 @@
+import re
 from itertools import zip_longest
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
-RED = "\033[31m"
-MAGENTA = "\033[35m"
-CYAN = "\033[36m"
+
+
+RED = "\033[31m"      # Color 1
+GREEN = "\033[32m"    # Color 2
+YELLOW = "\033[33m"   # Color 3
+BLUE = "\033[34m"     # Color 4
+MAGENTA = "\033[35m"  # Color 5
+CYAN = "\033[36m"     # Color 6
+WHITE = "\033[37m"    # Color 7
+
 
 GENTOO_BANNER = r"""
- _____                        
+{c1} _____                        
 |  ___)                       
 | |  ___ _  _____ ___   ___   
 | | / __) |/ (   ) _ \ / _ \  
 | | > _)| / / | ( (_) | (_) ) 
-|_| \___)__/   \_)___/ \___/  
+|_| \___)__/   \_)___/ \___/  {reset}
 """
 
 ARCH_BANNER = r"""
-  ___                    
- / _ \                   
+{c1} ___                    
+/ _ \                   
 | |_| | _____   ___ __  
 |  _  |/ _ \ \ / / '_ \ 
 | | | | |_) ) v /| | | |
 |_| |_|  __/ > < |_| | |
-      | |   / ^ \    | | 
-      |_|  /_/ \_\   |_| 
+      | |   / ^ \   | | 
+      |_|  /_/ \_\  |_| {reset}
 """
 
 ENDEAVOUR_BANNER = r"""
- _____       __                                         _________ 
+{c1} _____       __                                         _________ 
 |  ___)     / _)                                       / _ \  ___)
 | |_   _  __\ \  ___ __  ___________  ___  _   _  ___ | | | \ \   
 |  _) | |/ / _ \/ __)  \/ (  _____  )/ _ \| | | |/ _ \| | | |> >  
 | |___| / ( (_) > _| ()  <| |_/ \_| ( (_) ) |_| | |_) ) |_| / /__ 
 |_____)__/ \___/\___)__/\_\\___^___/ \___/ \___/|  __/ \___/_____)
                                                 | |               
-                                                |_|               
+                                                |_|               {reset}
 """
 
-
-YFETCH = r"""
-                                     
-            _                        
-           | |                       
- _  _  _  _| |_  ___ _____   ___ __  
-| || || |/     \/ __|   ) \ / / '_ \ 
-| \| |/ ( (| |) > _) | | \ v /| | | |
- \_   _/ \_   _/\___) \_) > < |_| | |
-   | |     | |           / ^ \    | |
-   |_|     |_|          /_/ \_\   |_|
-"""
 LOGOS = {
-    "gentoo": (GENTOO_BANNER, MAGENTA),
-    "arch": (ARCH_BANNER, CYAN),
-    "endeavour": (ENDEAVOUR_BANNER, MAGENTA),
+    "gentoo": (GENTOO_BANNER, MAGENTA, WHITE),
+    "arch": (ARCH_BANNER, CYAN, WHITE),
+    "endeavour": (ENDEAVOUR_BANNER, MAGENTA, RED),
 }
 
 
-
-def get_logo_and_color(distro_name: str) -> tuple[str, str]:
+def get_logo_and_color(distro_name: str) -> tuple[str, str, str]:
     normalized_name = distro_name.lower()
 
-    for key, (logo, color) in LOGOS.items():
+    for key, (logo_template, c1, c2) in LOGOS.items():
         if key in normalized_name:
-            return logo, color
+            rendered_logo = logo_template.format(c1=c1, c2=c2, reset=RESET)
+            return rendered_logo, c1, c2
 
-    return GENTOO_BANNER, MAGENTA
-
-
-
-
-
-def render_fetch(logo_str: str, info_lines: list[str], logo_color: str):
-
-    logo_lines = logo_str.strip("\n").splitlines()
-    max_logo_width = max(len(line) for line in logo_lines) if logo_lines else 0
-
-    for logo_line, info_line in zip_longest(logo_lines, info_lines, fillvalue=""):
-        padded_logo = f"{logo_line:<{max_logo_width}}"
-        print(f"{logo_color}{padded_logo}{RESET}  {info_line}")
+    # Fallback to Gentoo
+    rendered_logo = GENTOO_BANNER.format(c1=MAGENTA, c2=WHITE, reset=RESET)
+    return rendered_logo, MAGENTA, WHITE
